@@ -1,6 +1,9 @@
 name: Update Documentation
 on:
-  push
+  push:
+    paths:
+      - 'docs/**'
+      - 'README.md'
 
 jobs:
   trigger-update:
