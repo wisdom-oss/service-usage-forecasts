@@ -42,7 +42,7 @@ to generate water usage forecasts:
 > [!IMPORTANT]
 > To support on-demand forecasts, the microservice needs access to the Docker
 > Host.
-> Read more [here](docs/on-demand-forecasts.md)
+> Read more [here](./docs/on-demand-forecasts.md)
 
 To allow a dynamic creation and adaptation of forecasting algorithms, the
 service allows forecast algorithms written in R or Python.
@@ -51,7 +51,7 @@ request body will be parsed and put into a container. This container will then
 be built with the needed requirements and will then be executed as a one-off
 service.
 
-Read more [here](docs/on-demand-forecasts.md)
+Read more [here](./docs/on-demand-forecasts.md)
 
 ### Preloaded
 
