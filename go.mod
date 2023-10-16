@@ -5,6 +5,7 @@ go 1.21.1
 require (
 	github.com/go-chi/chi/v5 v5.0.10
 	github.com/go-chi/httplog v0.3.1
+	github.com/joho/godotenv v1.5.1
 	github.com/lib/pq v1.10.9
 	github.com/qustavo/dotsql v1.1.0
 	github.com/rs/zerolog v1.31.0
