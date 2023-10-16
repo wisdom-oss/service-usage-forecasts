@@ -5,6 +5,8 @@
 <p>⚙️ A microservice for water usage forecasts with support for on-demand and preconfigured forecasting algorithms</p>
 
 <img src="https://img.shields.io/github/go-mod/go-version/wisdom-oss/service-usage-forecasts?style=for-the-badge">
+<img alt="GitHub Workflow Status (with event)" src="https://img.shields.io/github/actions/workflow/status/wisdom-oss/service-usage-forecasts/docker.yaml?style=for-the-badge&label=Docker%20Image%20Build">
+
 </div>
 
 > [!NOTE]
