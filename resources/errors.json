@@ -1,8 +1,8 @@
 [
   {
-    "code": "TEMPLATE",
-    "title": "Template Error",
-    "description": "This is a template error, if you see this this means the error handling in the template works",
+    "code": "NO_AREA_DEFINED",
+    "title": "No Area Defined",
+    "description": "The request did not specify an area for which the forecast will be executed",
     "httpCode": 400
   }
 ]
