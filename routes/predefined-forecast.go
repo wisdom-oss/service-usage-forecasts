@@ -12,6 +12,7 @@ import (
 	"github.com/blockloop/scan/v2"
 	"github.com/go-chi/chi/v5"
 	"github.com/lib/pq"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 
 	"github.com/wisdom-oss/service-usage-forecasts/globals"
@@ -192,6 +193,7 @@ func PredefinedForecast(w http.ResponseWriter, r *http.Request) {
 	parameterFileName := strings.ReplaceAll(tempDataFile.Name(), "input", "parameter")
 	parameterFile, err := os.Create(parameterFileName)
 	defer parameterFile.Close()
+	defer os.Remove(parameterFileName)
 	if err != nil {
 		nativeErrorChannel <- fmt.Errorf("unable to create parameter file: %w", err)
 		<-nativeErrorHandled
@@ -199,7 +201,7 @@ func PredefinedForecast(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = r.ParseMultipartForm(5242880)
-	if err != nil {
+	if err != nil && !errors.Is(err, http.ErrNotMultipart) {
 		nativeErrorChannel <- fmt.Errorf("unable to parse form body: %w", err)
 		<-nativeErrorHandled
 		return
@@ -233,8 +235,4 @@ func PredefinedForecast(w http.ResponseWriter, r *http.Request) {
 		<-nativeErrorHandled
 		return
 	}
-	os.Remove(outputFile.Name())
-	os.Remove(parameterFile.Name())
-	os.Remove(tempDataFile.Name())
-
 }

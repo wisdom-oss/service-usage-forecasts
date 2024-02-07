@@ -4,9 +4,11 @@
     "LISTEN_PORT": "8000",
     "PG_PORT": "5432",
     "AUTH_CONFIG_FILE_LOCATION": "./authConfig.json",
-    "ERROR_FILE_LOCATION": "./errors.json5",
+    "ERROR_FILE_LOCATION": "./errors.json",
     "QUERY_FILE_LOCATION": "./queries.sql",
     "INTERNAL_ALGORITHM_LOCATION": "/algorithms",
-    "EXTERNAL_ALGORITHM_LOCATION": "/external-algorithms"
+    "EXTERNAL_ALGORITHM_LOCATION": "/external-algorithms",
+    "PYTHON_PACKAGES": "",
+    "R_PACKAGES": ""
   }
 }
