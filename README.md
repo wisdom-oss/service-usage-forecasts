@@ -34,26 +34,23 @@ to generate water usage forecasts:
 
 ### Supported Languages
 
+> [!NOTE]
+> The addition of more languages is planned but for the time being only python
+> is supported by default.
+
 | Language | Version |
 |----------|---------|
 | Python   | v3.10   |
-| R        | v4.3.1  |
 
 ### On-demand
-
 > [!IMPORTANT]
-> To support on-demand forecasts, the microservice needs access to the Docker
-> Host.
-> Read more [here](./docs/on-demand-forecasts.md)
+> The on-demand forecasts are currently a WIP since there are still some issues
+> with script isolation.
+> Therefore, on-demand forecasts will not be available at this time.
 
-To allow a dynamic creation and adaptation of forecasting algorithms, the
-service allows forecast algorithms written in R or Python.
-When receiving an on-demand custom forecast request, the script sent in the
-request body will be parsed and put into a container. This container will then
-be built with the needed requirements and will then be executed as a one-off
-service.
-
-Read more [here](./docs/on-demand-forecasts.md)
+The service accepts custom on-demand written forecasting models and allows a
+fast testing and validation of new forecasting models.
+These on-demand forecasts are executed in a new docker container.
 
 ### Preloaded
 
