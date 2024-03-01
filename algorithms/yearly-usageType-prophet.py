@@ -9,11 +9,6 @@ import pandas
 import prophet
 import sklearn.metrics
 
-description = """
-This is an example on how to handle the input and output for algorithms and the
-data pulled from the databases 
-"""
-
 parameters = {
     "size": 30,
     "interval_width": 0.80,
@@ -23,27 +18,6 @@ parameters = {
     "weekly_seasonality": False,
     "yearly_seasonality": False,
 }
-
-
-class print_description(argparse.Action):
-    def __init__(self, option_strings, dest, **kwargs):
-        return super().__init__(option_strings, dest, nargs=0, default=argparse.SUPPRESS, **kwargs)
-
-    def __call__(self, *args, **kwargs):
-        print(description.strip())
-        parser.exit()
-        exit(0)
-
-
-class return_arguments(argparse.Action):
-    def __init__(self, option_strings, dest, **kwargs):
-        return super().__init__(option_strings, dest, nargs=0, default=argparse.SUPPRESS, **kwargs)
-
-    def __call__(self, *args, **kwargs):
-        print(json.dumps(parameters))
-        parser.exit()
-        exit(0)
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

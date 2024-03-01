@@ -17,30 +17,8 @@ parameters = {
     "size": 30
 }
 
-class print_description(argparse.Action):
-    def __init__(self, option_strings, dest, **kwargs):
-        return super().__init__(option_strings, dest, nargs=0, default=argparse.SUPPRESS, **kwargs)
-
-    def __call__(self, *args, **kwargs):
-        print(description.strip())
-        parser.exit()
-        exit(0)
-
-
-class return_arguments(argparse.Action):
-    def __init__(self, option_strings, dest, **kwargs):
-        return super().__init__(option_strings, dest, nargs=0, default=argparse.SUPPRESS, **kwargs)
-
-    def __call__(self, *args, **kwargs):
-        print(json.dumps(parameters))
-        parser.exit()
-        exit(0)
-
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--parameters", help="return parameters of forecast algorithm", action=return_arguments)
-    parser.add_argument("--description", help="return parameters of forecast algorithm", action=print_description)
     parser.add_argument("data_file", default="")
     parser.add_argument("output_file", default="")
     parser.add_argument("parameter_file", default="")

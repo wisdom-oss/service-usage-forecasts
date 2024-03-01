@@ -8,11 +8,6 @@ import pandas
 import numpy
 import sklearn.metrics
 
-description = """
-This is an example on how to handle the input and output for algorithms and the
-data pulled from the databases 
-"""
-
 parameters = {
     "size": 30
 }
