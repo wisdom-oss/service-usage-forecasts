@@ -16,6 +16,7 @@ import (
 
 	"github.com/wisdom-oss/service-usage-forecasts/globals"
 
+	_ "github.com/joho/godotenv/autoload"
 	_ "github.com/lib/pq"
 )
 

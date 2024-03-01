@@ -1,0 +1,48 @@
+openapi: "3.0.0"
+info:
+  title: Usage Forecasts
+  description: |
+    > **Note**
+    > This microservice replaces the two-part microservice to minimize the used
+    > technologies in the WISdoM platform. All features present in the two-part
+    > microservice will be ported.
+    >
+    > The only feature that will not be ported is the communication using AMQP 
+    > since this technology will be discontinued in the WISdoM platform.
+    
+    This microservice allows user to use pre-built and custom on-demand 
+    forecasting algorithms to generate water usage forecasts.
+  version: 2.0.0
+components:
+  schemas:
+    Parameter:
+      properties:
+        defaultValue: {}
+        description:
+          type: string
+    Script:
+      properties:
+        identifier:
+          type: string
+        description:
+          type: string
+        parameters:
+          type: array
+          items:
+            $ref: '#/components/schemas/Parameter'
+
+paths:
+  /:
+    get:
+      operationId: get-info
+      description: |
+        Get information about the currently available algorithms and their
+        parameters.
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Script'

@@ -22,3 +22,5 @@ go.work
 
 # Environment
 .env
+# External algorithms
+external-algorithms/
