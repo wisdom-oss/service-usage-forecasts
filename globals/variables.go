@@ -21,6 +21,3 @@ var AuthorizationConfiguration wisdomType.AuthorizationConfiguration
 // they were set to. However, this variable only contains the configured environment
 // variables
 var Environment map[string]string = make(map[string]string)
-
-// Errors contain all errors that have been predefined in the "errors.json" file.
-var Errors map[string]wisdomType.WISdoMError = make(map[string]wisdomType.WISdoMError)
