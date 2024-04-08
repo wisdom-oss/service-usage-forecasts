@@ -14,6 +14,7 @@ import (
 	"github.com/rs/zerolog/log"
 	wisdomType "github.com/wisdom-oss/commonTypes/v2"
 	wisdomMiddlware "github.com/wisdom-oss/microservice-middlewares/v4"
+	"gopkg.in/yaml.v3"
 
 	"github.com/wisdom-oss/service-usage-forecasts/globals"
 	"github.com/wisdom-oss/service-usage-forecasts/helpers"
@@ -47,6 +48,13 @@ var ErrUnknownAlgorithm = wisdomType.WISdoMError{
 	Status: http.StatusNotFound,
 	Title:  "Unknown Algorithm",
 	Detail: "The algorithm specified in the request does not exist on the server. Please check your request and make sure that the requested script is stored on the server",
+}
+
+var ErrInvalidBucketSize = wisdomType.WISdoMError{
+	Type:   "https://www.rfc-editor.org/rfc/rfc9110#section-15.5.1",
+	Status: http.StatusBadRequest,
+	Title:  "Invalid Bucket Size",
+	Detail: "The amount of seconds provided for the size of the bucket is not valid. Please check the documentation",
 }
 
 // PredefinedForecast handles requests for predefined forecasts.
@@ -166,18 +174,50 @@ func PredefinedForecast(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	metaFilePath := fmt.Sprintf("%s/%s.yaml", globals.Environment["INTERNAL_ALGORITHM_LOCATION"], algorithmName)
+	var metadata types.AlgorithmMetadata
+	file, err := os.Open(metaFilePath)
+	if err != nil {
+		errorHandler <- fmt.Errorf("unable to open script metadata: %w", err)
+		<-statusChannel
+		return
+	}
+	err = yaml.NewDecoder(file).Decode(&metadata)
+	if err != nil {
+		errorHandler <- fmt.Errorf("unable to parse script metadata: %w", err)
+		<-statusChannel
+		return
+	}
+
 	log.Debug().Msg("pulling usage data from the database")
 	var query string
 	var args []interface{}
-	if !consumerGroupsSet {
-		query, err = globals.SqlQueries.Raw("get-usages-by-municipality")
-		args = []interface{}{keyRegEx}
-	} else {
+
+	switch {
+	case metadata.UseBuckets && consumerGroupsSet:
+		query, err = globals.SqlQueries.Raw("get-bucketed-usages-by-municipality-consumer-groups")
+		args = []interface{}{metadata.BucketSize, keyRegEx, consumerGroupsSet}
+		break
+	case metadata.UseBuckets && !consumerGroupsSet:
+		query, err = globals.SqlQueries.Raw("get-bucketed-usages-by-municipality")
+		args = []interface{}{metadata.BucketSize, keyRegEx}
+		break
+	case !metadata.UseBuckets && consumerGroupsSet:
 		query, err = globals.SqlQueries.Raw("get-usages-by-municipality-consumer-groups")
 		args = []interface{}{keyRegEx, consumerGroups}
+		break
+	case !metadata.UseBuckets && !consumerGroupsSet:
+		query, err = globals.SqlQueries.Raw("get-usages-by-municipality")
+		args = []interface{}{keyRegEx}
 	}
-	var usageDataPoints []types.UsageDataPoint
 
+	if err != nil {
+		errorHandler <- fmt.Errorf("unable to prepare query for usage data: %w", err)
+		<-statusChannel
+		return
+	}
+
+	var usageDataPoints []types.UsageDataPoint
 	err = pgxscan.Select(r.Context(), globals.Db, &usageDataPoints, query, args...)
 
 	if err != nil {
