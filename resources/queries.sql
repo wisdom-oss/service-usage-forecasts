@@ -18,7 +18,7 @@ SELECT municipality,
        date,
        usage_type,
        amount
-FROM wisdom.water_usage.usages
+FROM wisdom.timeseries.water_usage
 WHERE municipality ~ $1;
 
 -- name: get-usages-by-municipality-consumer-groups
@@ -26,6 +26,6 @@ SELECT municipality,
        date,
        usage_type,
        amount
-FROM wisdom.water_usage.usages
+FROM wisdom.timeseries.water_usage
 WHERE municipality ~ $1
   AND usage_type IN ($2);
