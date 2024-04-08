@@ -14,7 +14,7 @@ type AlgorithmInformation struct {
 	// BucketConfiguration
 	BucketConfiguration struct {
 		UseBuckets bool   `json:"useBuckets"`
-		BucketSize uint64 `json:"bucketSize,omitempty"`
+		BucketSize string `json:"bucketSize,omitempty"`
 	} `json:"bucketConfiguration"`
 
 	// Parameter describes the parameters and is directly read from the

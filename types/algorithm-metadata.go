@@ -14,5 +14,5 @@ type AlgorithmMetadata struct {
 
 	// BucketSize specifies the size of each bucket in seconds.
 	// As the buckets may only be of a positive size, the values here are uint64
-	BucketSize uint64 `json:"bucketSize" yaml:"bucketSize"`
+	BucketSize string `json:"bucketSize" yaml:"bucketSize"`
 }
