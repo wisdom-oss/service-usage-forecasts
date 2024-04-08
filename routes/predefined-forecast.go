@@ -178,7 +178,7 @@ func PredefinedForecast(w http.ResponseWriter, r *http.Request) {
 	}
 	var usageDataPoints []types.UsageDataPoint
 
-	err = pgxscan.Select(r.Context(), globals.Db, &usageDataPoints, query, args)
+	err = pgxscan.Select(r.Context(), globals.Db, &usageDataPoints, query, args...)
 
 	if err != nil {
 		errorHandler <- err
@@ -233,7 +233,7 @@ func PredefinedForecast(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if r.MultipartForm.Value["parameter"] != nil {
+	if r.MultipartForm != nil && r.MultipartForm.Value["parameter"] != nil {
 		c, err := parameterFile.Write([]byte(r.MultipartForm.Value["parameter"][0]))
 		log.Debug().Int("bytes", c).Msg("wrote parameter")
 		if err != nil {
