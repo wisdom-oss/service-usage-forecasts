@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -9,15 +8,46 @@ import (
 	"os"
 	"strings"
 
+	"github.com/georgysavva/scany/v2/pgxscan"
 	"github.com/go-chi/chi/v5"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
+	wisdomType "github.com/wisdom-oss/commonTypes/v2"
 	wisdomMiddlware "github.com/wisdom-oss/microservice-middlewares/v4"
 
 	"github.com/wisdom-oss/service-usage-forecasts/globals"
 	"github.com/wisdom-oss/service-usage-forecasts/helpers"
 	"github.com/wisdom-oss/service-usage-forecasts/types"
 )
+
+// ErrNoAreaSelected is an error that occurs when the request did not specify
+// the area for which the prognosis shall be executed.
+var ErrNoAreaSelected = wisdomType.WISdoMError{
+	Type:   "https://www.rfc-editor.org/rfc/rfc9110#section-15.5.1",
+	Status: http.StatusBadRequest,
+	Title:  "No Area Selected",
+	Detail: "The request did not specify the area for which the prognosis shall be executed, this is not allowed",
+}
+
+// ErrNoAlgorithmSpecified is an error that occurs when the request did not
+// contain an identifier for an algorithm.
+var ErrNoAlgorithmSpecified = wisdomType.WISdoMError{
+	Type:   "https://www.rfc-editor.org/rfc/rfc9110#section-15.5.1",
+	Status: http.StatusBadRequest,
+	Title:  "No Algorithm Specified",
+	Detail: "The request did not contain a identifier for an algorithm",
+}
+
+// ErrUnknownAlgorithm is an error that occurs when the algorithm specified in
+// the request does not exist on the server.
+// Please check your request and make sure that the requested script is stored
+// on the server
+var ErrUnknownAlgorithm = wisdomType.WISdoMError{
+	Type:   "https://www.rfc-editor.org/rfc/rfc9110#section-15.5.5",
+	Status: http.StatusNotFound,
+	Title:  "Unknown Algorithm",
+	Detail: "The algorithm specified in the request does not exist on the server. Please check your request and make sure that the requested script is stored on the server",
+}
 
 // PredefinedForecast handles requests for predefined forecasts.
 // this also includes external predefined forecast algorithms loaded during the
@@ -31,7 +61,7 @@ func PredefinedForecast(w http.ResponseWriter, r *http.Request) {
 	// shall be taken
 	municipalKeys, keysSet := r.URL.Query()["key"]
 	if !keysSet {
-		errorHandler <- "NO_AREA_DEFINED"
+		errorHandler <- ErrNoAreaSelected
 		<-statusChannel
 		return
 	}
@@ -48,7 +78,7 @@ func PredefinedForecast(w http.ResponseWriter, r *http.Request) {
 	if consumerGroupsSet {
 		// since there are consumer groups set, resolve the external identifiers
 		// into the uuids that are used in the usage table
-		rows, err := globals.SqlQueries.Query(globals.Db, "get-consumer-groups-by-external-id", consumerGroups)
+		query, err := globals.SqlQueries.Raw("get-consumer-groups-by-external-id")
 		if err != nil {
 			errorHandler <- err
 			<-statusChannel
@@ -56,36 +86,37 @@ func PredefinedForecast(w http.ResponseWriter, r *http.Request) {
 		}
 		// now get the usage type ids
 		var usageTypes []types.UsageType
-		err = scan.Rows(&usageTypes, rows)
+		err = pgxscan.Select(r.Context(), globals.Db, &usageTypes, query, consumerGroups)
 		if err != nil {
-			errorHandler <- fmt.Errorf("unable to parse usage types from database: %w", err)
+			errorHandler <- fmt.Errorf("unable to query usage types from database: %w", err)
 			<-statusChannel
 			return
 		}
 		var consumerGroupIDs []string
 		for _, usageType := range usageTypes {
-			consumerGroupIDs = append(consumerGroupIDs, usageType.ID.String())
+			uuid, _ := usageType.ID.Value()
+			consumerGroupIDs = append(consumerGroupIDs, uuid.(string))
 		}
 		// now reassign the resolved consumer group ids to the consumer groups
 		consumerGroups = consumerGroupIDs
 	} else {
-		rows, err := globals.SqlQueries.Query(globals.Db, "get-consumer-groups")
+		query, err := globals.SqlQueries.Raw("get-consumer-groups")
 		if err != nil {
 			errorHandler <- err
 			<-statusChannel
 			return
 		}
-		// now get the usage type ids
 		var usageTypes []types.UsageType
-		err = scan.Rows(&usageTypes, rows)
+		err = pgxscan.Select(r.Context(), globals.Db, &usageTypes, query, consumerGroups)
 		if err != nil {
-			errorHandler <- fmt.Errorf("unable to parse usage types from database: %w", err)
+			errorHandler <- fmt.Errorf("unable to query usage types from database: %w", err)
 			<-statusChannel
 			return
 		}
 		var consumerGroupIDs []string
 		for _, usageType := range usageTypes {
-			consumerGroupIDs = append(consumerGroupIDs, usageType.ID.String())
+			uuid, _ := usageType.ID.Value()
+			consumerGroupIDs = append(consumerGroupIDs, uuid.(string))
 		}
 		// now reassign the resolved consumer group ids to the consumer groups
 		consumerGroups = consumerGroupIDs
@@ -97,7 +128,7 @@ func PredefinedForecast(w http.ResponseWriter, r *http.Request) {
 	// get the algorithm from the url parameters
 	algorithmName := strings.TrimSpace(chi.URLParam(r, "algorithm-name"))
 	if algorithmName == "" {
-		errorHandler <- "ALGORITHM_NOT_SET"
+		errorHandler <- ErrNoAlgorithmSpecified
 		<-statusChannel
 		return
 	}
@@ -130,18 +161,24 @@ func PredefinedForecast(w http.ResponseWriter, r *http.Request) {
 
 	// now check if the algorithm file name is still empty
 	if strings.TrimSpace(algorithmFileName) == "" {
-		wisdomErrorChannel <- "UNKNOWN_ALGORITHM"
-		<-wisdomErrorHandled
+		errorHandler <- ErrUnknownAlgorithm
+		<-statusChannel
 		return
 	}
 
 	log.Debug().Msg("pulling usage data from the database")
-	var rows *sql.Rows
+	var query string
+	var args []interface{}
 	if !consumerGroupsSet {
-		rows, err = globals.SqlQueries.Query(globals.Db, "get-usages-by-municipality", keyRegEx)
+		query, err = globals.SqlQueries.Raw("get-usages-by-municipality")
+		args = []interface{}{keyRegEx}
 	} else {
-		rows, err = globals.SqlQueries.Query(globals.Db, "get-usages-by-municipality-consumer-groups", keyRegEx, pq.Array(consumerGroups))
+		query, err = globals.SqlQueries.Raw("get-usages-by-municipality-consumer-groups")
+		args = []interface{}{keyRegEx, consumerGroups}
 	}
+	var usageDataPoints []types.UsageDataPoint
+
+	err = pgxscan.Select(r.Context(), globals.Db, &usageDataPoints, query, args)
 
 	if err != nil {
 		errorHandler <- err
@@ -149,14 +186,6 @@ func PredefinedForecast(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// now parse the rows into an array of UsageDataPoint
-	var usageDataPoints []types.UsageDataPoint
-	err = scan.Rows(&usageDataPoints, rows)
-	if err != nil {
-		errorHandler <- fmt.Errorf("unable to parse usage data into structs: %w", err)
-		<-statusChannel
-		return
-	}
 	log.Debug().Msg("pulled usage data from the database")
 	// now write the usage data points into a temporary json file
 	log.Debug().Msg("writing usage data to file")
