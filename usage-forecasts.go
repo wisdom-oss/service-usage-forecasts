@@ -11,7 +11,7 @@ import (
 	chiMiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/httplog"
 	"github.com/rs/zerolog/log"
-	wisdomMiddleware "github.com/wisdom-oss/microservice-middlewares/v2"
+	wisdomMiddleware "github.com/wisdom-oss/microservice-middlewares/v4"
 
 	"github.com/wisdom-oss/service-usage-forecasts/routes"
 
@@ -28,13 +28,12 @@ func main() {
 	// create a new router
 	router := chi.NewRouter()
 	// add some middlewares to the router to allow identifying requests
-	router.Use(wisdomMiddleware.NativeErrorHandler(globals.ServiceName))
-	router.Use(wisdomMiddleware.WISdoMErrorHandler(globals.Errors))
 	router.Use(chiMiddleware.RequestID)
 	router.Use(chiMiddleware.RealIP)
 	router.Use(httplog.Handler(l))
+	router.Use(wisdomMiddleware.ErrorHandler)
 	// now add the authorization middleware to the router
-	router.Use(wisdomMiddleware.Authorization(globals.AuthorizationConfiguration, globals.ServiceName))
+	router.Use(wisdomMiddleware.Authorization(globals.ServiceName))
 	// now mount the admin router
 	router.HandleFunc("/", routes.InformationRoute)
 	router.Post("/{algorithm-name}", routes.PredefinedForecast)

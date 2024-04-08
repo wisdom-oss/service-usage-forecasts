@@ -10,21 +10,21 @@ import (
 	"github.com/wisdom-oss/service-usage-forecasts/globals"
 	"github.com/wisdom-oss/service-usage-forecasts/helpers"
 	"github.com/wisdom-oss/service-usage-forecasts/types"
+
+	wisdomMiddlware "github.com/wisdom-oss/microservice-middlewares/v4"
 )
 
 // InformationRoute allows users to check the capabilities and available scripts
 // and identifiers for the different algorithms
 func InformationRoute(w http.ResponseWriter, r *http.Request) {
 	// access the error handlers
-	nativeErrorChannel := r.Context().Value("nativeErrorChannel").(chan error)
-	nativeErrorHandled := r.Context().Value("nativeErrorHandled").(chan bool)
-	//wisdomErrorChannel := r.Context().Value("wisdomErrorChannel").(chan string)
-	//wisdomErrorHandled := r.Context().Value("wisdomErrorHandled").(chan bool)
+	errorHandler := r.Context().Value(wisdomMiddlware.ErrorChannelName).(chan<- interface{})
+	statusChannel := r.Context().Value(wisdomMiddlware.StatusChannelName).(<-chan bool)
 
 	entries, err := os.ReadDir(globals.Environment["INTERNAL_ALGORITHM_LOCATION"])
 	if err != nil {
-		nativeErrorChannel <- err
-		<-nativeErrorHandled
+		errorHandler <- err
+		<-statusChannel
 		return
 	}
 	var algorithms []types.AlgorithmInformation
@@ -48,8 +48,8 @@ func InformationRoute(w http.ResponseWriter, r *http.Request) {
 		metaFilePath := fmt.Sprintf("%s/%s.yaml", globals.Environment["INTERNAL_ALGORITHM_LOCATION"], algorithmInformation.Identifier)
 		parameters, description, err := helpers.GetAlgorithmMetadata(metaFilePath)
 		if err != nil {
-			nativeErrorChannel <- err
-			<-nativeErrorHandled
+			errorHandler <- err
+			<-statusChannel
 			return
 		}
 		algorithmInformation.Parameter = parameters
@@ -57,14 +57,12 @@ func InformationRoute(w http.ResponseWriter, r *http.Request) {
 		algorithms = append(algorithms, algorithmInformation)
 	}
 
-	// since now all algorithms are
-
 	// now respond with the algorithm information
 	w.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(w).Encode(algorithms)
 	if err != nil {
-		nativeErrorChannel <- fmt.Errorf("unable encode response: %w", err)
-		<-nativeErrorHandled
+		errorHandler <- fmt.Errorf("unable encode response: %w", err)
+		<-statusChannel
 		return
 	}
 
