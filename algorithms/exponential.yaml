@@ -1,0 +1,9 @@
+description: >-
+  An algorithm that implements an exponential fit to a variable degree
+
+parameters:
+  degree:
+    description: >-
+      The degree of the polynomial equation that should be used to fit the
+      function to
+    default: 3
