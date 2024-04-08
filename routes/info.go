@@ -46,14 +46,16 @@ func InformationRoute(w http.ResponseWriter, r *http.Request) {
 		algorithmInformation.Filename = entry.Name()
 		algorithmInformation.Identifier = strings.SplitN(entry.Name(), ".", 2)[0]
 		metaFilePath := fmt.Sprintf("%s/%s.yaml", globals.Environment["INTERNAL_ALGORITHM_LOCATION"], algorithmInformation.Identifier)
-		parameters, description, err := helpers.GetAlgorithmMetadata(metaFilePath)
+		metadata, err := helpers.GetAlgorithmMetadata(metaFilePath)
 		if err != nil {
 			errorHandler <- err
 			<-statusChannel
 			return
 		}
-		algorithmInformation.Parameter = parameters
-		algorithmInformation.Description = description
+		algorithmInformation.Parameter = metadata.Parameters
+		algorithmInformation.Description = metadata.Description
+		algorithmInformation.BucketConfiguration.UseBuckets = metadata.UseBuckets
+		algorithmInformation.BucketConfiguration.BucketSize = metadata.BucketSize
 		algorithms = append(algorithms, algorithmInformation)
 	}
 
