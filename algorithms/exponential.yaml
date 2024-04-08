@@ -9,4 +9,4 @@ parameters:
     default: 3
 
 useBuckets: true
-bucketSize: 31556952
+bucketSize: 1 year
