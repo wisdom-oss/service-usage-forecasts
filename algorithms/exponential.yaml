@@ -7,3 +7,6 @@ parameters:
       The degree of the polynomial equation that should be used to fit the
       function to
     default: 3
+
+useBuckets: true
+bucketSize: 31556952

@@ -7,3 +7,6 @@ parameters:
       The amount of years that shall be predicted, after the source data is 
       available
     default: 30
+
+useBuckets: true
+bucketSize: 31556952
