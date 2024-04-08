@@ -107,7 +107,7 @@ func PredefinedForecast(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		var usageTypes []types.UsageType
-		err = pgxscan.Select(r.Context(), globals.Db, &usageTypes, query, consumerGroups)
+		err = pgxscan.Select(r.Context(), globals.Db, &usageTypes, query)
 		if err != nil {
 			errorHandler <- fmt.Errorf("unable to query usage types from database: %w", err)
 			<-statusChannel
