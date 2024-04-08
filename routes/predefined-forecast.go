@@ -9,11 +9,10 @@ import (
 	"os"
 	"strings"
 
-	"github.com/blockloop/scan/v2"
 	"github.com/go-chi/chi/v5"
-	"github.com/lib/pq"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
+	wisdomMiddlware "github.com/wisdom-oss/microservice-middlewares/v4"
 
 	"github.com/wisdom-oss/service-usage-forecasts/globals"
 	"github.com/wisdom-oss/service-usage-forecasts/helpers"
@@ -25,17 +24,15 @@ import (
 // startup
 func PredefinedForecast(w http.ResponseWriter, r *http.Request) {
 	// access the error handlers
-	nativeErrorChannel := r.Context().Value("nativeErrorChannel").(chan error)
-	nativeErrorHandled := r.Context().Value("nativeErrorHandled").(chan bool)
-	wisdomErrorChannel := r.Context().Value("wisdomErrorChannel").(chan string)
-	wisdomErrorHandled := r.Context().Value("wisdomErrorHandled").(chan bool)
+	errorHandler := r.Context().Value(wisdomMiddlware.ErrorChannelName).(chan<- interface{})
+	statusChannel := r.Context().Value(wisdomMiddlware.StatusChannelName).(<-chan bool)
 
 	// get the municipals identifying the regions from which the water usages
 	// shall be taken
 	municipalKeys, keysSet := r.URL.Query()["key"]
 	if !keysSet {
-		wisdomErrorChannel <- "NO_AREA_DEFINED"
-		<-wisdomErrorHandled
+		errorHandler <- "NO_AREA_DEFINED"
+		<-statusChannel
 		return
 	}
 
@@ -53,16 +50,16 @@ func PredefinedForecast(w http.ResponseWriter, r *http.Request) {
 		// into the uuids that are used in the usage table
 		rows, err := globals.SqlQueries.Query(globals.Db, "get-consumer-groups-by-external-id", consumerGroups)
 		if err != nil {
-			nativeErrorChannel <- err
-			<-nativeErrorHandled
+			errorHandler <- err
+			<-statusChannel
 			return
 		}
 		// now get the usage type ids
 		var usageTypes []types.UsageType
 		err = scan.Rows(&usageTypes, rows)
 		if err != nil {
-			nativeErrorChannel <- fmt.Errorf("unable to parse usage types from database: %w", err)
-			<-nativeErrorHandled
+			errorHandler <- fmt.Errorf("unable to parse usage types from database: %w", err)
+			<-statusChannel
 			return
 		}
 		var consumerGroupIDs []string
@@ -74,16 +71,16 @@ func PredefinedForecast(w http.ResponseWriter, r *http.Request) {
 	} else {
 		rows, err := globals.SqlQueries.Query(globals.Db, "get-consumer-groups")
 		if err != nil {
-			nativeErrorChannel <- err
-			<-nativeErrorHandled
+			errorHandler <- err
+			<-statusChannel
 			return
 		}
 		// now get the usage type ids
 		var usageTypes []types.UsageType
 		err = scan.Rows(&usageTypes, rows)
 		if err != nil {
-			nativeErrorChannel <- fmt.Errorf("unable to parse usage types from database: %w", err)
-			<-nativeErrorHandled
+			errorHandler <- fmt.Errorf("unable to parse usage types from database: %w", err)
+			<-statusChannel
 			return
 		}
 		var consumerGroupIDs []string
@@ -100,8 +97,8 @@ func PredefinedForecast(w http.ResponseWriter, r *http.Request) {
 	// get the algorithm from the url parameters
 	algorithmName := strings.TrimSpace(chi.URLParam(r, "algorithm-name"))
 	if algorithmName == "" {
-		wisdomErrorChannel <- "ALGORITHM_NOT_SET"
-		<-wisdomErrorHandled
+		errorHandler <- "ALGORITHM_NOT_SET"
+		<-statusChannel
 		return
 	}
 
@@ -109,8 +106,8 @@ func PredefinedForecast(w http.ResponseWriter, r *http.Request) {
 	var algorithmFileName string
 	entries, err := os.ReadDir(globals.Environment["INTERNAL_ALGORITHM_LOCATION"])
 	if err != nil {
-		nativeErrorChannel <- err
-		<-nativeErrorHandled
+		errorHandler <- err
+		<-statusChannel
 		return
 	}
 	// now iterate over the entries
@@ -147,8 +144,8 @@ func PredefinedForecast(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		nativeErrorChannel <- err
-		<-nativeErrorHandled
+		errorHandler <- err
+		<-statusChannel
 		return
 	}
 
@@ -156,8 +153,8 @@ func PredefinedForecast(w http.ResponseWriter, r *http.Request) {
 	var usageDataPoints []types.UsageDataPoint
 	err = scan.Rows(&usageDataPoints, rows)
 	if err != nil {
-		nativeErrorChannel <- fmt.Errorf("unable to parse usage data into structs: %w", err)
-		<-nativeErrorHandled
+		errorHandler <- fmt.Errorf("unable to parse usage data into structs: %w", err)
+		<-statusChannel
 		return
 	}
 	log.Debug().Msg("pulled usage data from the database")
@@ -166,14 +163,14 @@ func PredefinedForecast(w http.ResponseWriter, r *http.Request) {
 	tempDataFile, err := os.CreateTemp("", "forecast.*.input")
 	defer tempDataFile.Close()
 	if err != nil {
-		nativeErrorChannel <- fmt.Errorf("unable to create temporary data file: %w", err)
-		<-nativeErrorHandled
+		errorHandler <- fmt.Errorf("unable to create temporary data file: %w", err)
+		<-statusChannel
 		return
 	}
 	err = json.NewEncoder(tempDataFile).Encode(usageDataPoints)
 	if err != nil {
-		nativeErrorChannel <- fmt.Errorf("unable to write usage data to file: %w", err)
-		<-nativeErrorHandled
+		errorHandler <- fmt.Errorf("unable to write usage data to file: %w", err)
+		<-statusChannel
 		return
 	}
 	log.Debug().Msg("wrote data to temporary file")
@@ -184,8 +181,8 @@ func PredefinedForecast(w http.ResponseWriter, r *http.Request) {
 	outputFile, err := os.Create(outputFileName)
 	defer outputFile.Close()
 	if err != nil {
-		nativeErrorChannel <- fmt.Errorf("unable to open temporaray output file: %w", err)
-		<-nativeErrorHandled
+		errorHandler <- fmt.Errorf("unable to open temporaray output file: %w", err)
+		<-statusChannel
 		return
 	}
 
@@ -195,15 +192,15 @@ func PredefinedForecast(w http.ResponseWriter, r *http.Request) {
 	defer parameterFile.Close()
 	defer os.Remove(parameterFileName)
 	if err != nil {
-		nativeErrorChannel <- fmt.Errorf("unable to create parameter file: %w", err)
-		<-nativeErrorHandled
+		errorHandler <- fmt.Errorf("unable to create parameter file: %w", err)
+		<-statusChannel
 		return
 	}
 
 	err = r.ParseMultipartForm(5242880)
 	if err != nil && !errors.Is(err, http.ErrNotMultipart) {
-		nativeErrorChannel <- fmt.Errorf("unable to parse form body: %w", err)
-		<-nativeErrorHandled
+		errorHandler <- fmt.Errorf("unable to parse form body: %w", err)
+		<-statusChannel
 		return
 	}
 
@@ -211,8 +208,8 @@ func PredefinedForecast(w http.ResponseWriter, r *http.Request) {
 		c, err := parameterFile.Write([]byte(r.MultipartForm.Value["parameter"][0]))
 		log.Debug().Int("bytes", c).Msg("wrote parameter")
 		if err != nil {
-			nativeErrorChannel <- fmt.Errorf("write to parameter file: %w", err)
-			<-nativeErrorHandled
+			errorHandler <- fmt.Errorf("write to parameter file: %w", err)
+			<-statusChannel
 			return
 		}
 	}
@@ -221,8 +218,8 @@ func PredefinedForecast(w http.ResponseWriter, r *http.Request) {
 	log.Debug().Msg("calling algorithm")
 	err = helpers.CallAlgorithm(algorithmFileName, tempDataFile.Name(), outputFile.Name(), parameterFile.Name())
 	if err != nil {
-		nativeErrorChannel <- fmt.Errorf("unable to run algorithm: %w", err)
-		<-nativeErrorHandled
+		errorHandler <- fmt.Errorf("unable to run algorithm: %w", err)
+		<-statusChannel
 		return
 	}
 	log.Debug().Msg("algorithm finished")
@@ -231,8 +228,8 @@ func PredefinedForecast(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	_, err = io.Copy(w, outputFile)
 	if err != nil {
-		nativeErrorChannel <- fmt.Errorf("unable to read results: %w", err)
-		<-nativeErrorHandled
+		errorHandler <- fmt.Errorf("unable to read results: %w", err)
+		<-statusChannel
 		return
 	}
 }
