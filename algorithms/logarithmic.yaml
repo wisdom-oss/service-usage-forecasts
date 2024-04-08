@@ -2,4 +2,4 @@ description: >-
   An algorithm that implements an logarithmic fit
 
 useBuckets: true
-bucketSize: 31556952
+bucketSize: 1 year
