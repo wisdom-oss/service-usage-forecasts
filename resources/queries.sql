@@ -15,7 +15,7 @@ WHERE external_identifier = ANY ($1);
 
 -- name: get-usages-by-municipality
 SELECT municipality,
-       date,
+       time,
        usage_type,
        amount
 FROM wisdom.timeseries.water_usage
@@ -23,7 +23,7 @@ WHERE municipality ~ $1;
 
 -- name: get-usages-by-municipality-consumer-groups
 SELECT municipality,
-       date,
+       time,
        usage_type,
        amount
 FROM wisdom.timeseries.water_usage
