@@ -36,7 +36,7 @@ func main() {
 	router.Use(wisdomMiddleware.Authorization(globals.ServiceName))
 	// now mount the admin router
 	router.HandleFunc("/", routes.InformationRoute)
-	router.Post("/{algorithm-name}", routes.PredefinedForecast)
+	router.HandleFunc("/{algorithm-name}", routes.PredefinedForecast)
 
 	// now boot up the service
 	// Configure the HTTP server
