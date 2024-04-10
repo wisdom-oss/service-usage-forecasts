@@ -69,6 +69,7 @@ func configureLogger() {
 	}
 	// since now a logging level is set, configure the logger
 	zerolog.SetGlobalLevel(loggingLevel)
+	log.Output(os.Stdout)
 }
 
 // loadServiceConfiguration handles loading the `environment.json` file which
