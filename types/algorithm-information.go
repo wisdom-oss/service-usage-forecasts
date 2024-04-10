@@ -11,6 +11,12 @@ type AlgorithmInformation struct {
 	//  requests, and other purposes
 	Identifier string `json:"identifier"`
 
+	// BucketConfiguration
+	BucketConfiguration struct {
+		UseBuckets bool   `json:"useBuckets"`
+		BucketSize string `json:"bucketSize,omitempty"`
+	} `json:"bucketConfiguration"`
+
 	// Parameter describes the parameters and is directly read from the
 	// file containing the metadata
 	Parameter map[string]Parameter `json:"parameter"`

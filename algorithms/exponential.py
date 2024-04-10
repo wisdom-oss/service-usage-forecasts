@@ -14,7 +14,8 @@ data pulled from the databases
 """
 
 parameters = {
-    "size": 30
+    "size": 30,
+    "degree": 3
 }
 
 if __name__ == "__main__":
@@ -55,26 +56,28 @@ if __name__ == "__main__":
             x_axis.append(year)
             y_axis.append(usage)
             return_objects.append({
-                "label": f"{int(municipal)}",
-                "x": year,
-                "y": usage
+                "label": municipal,
+                "x": int(year),
+                "y": float(usage)
             })
 
-        prediction_x_axis = numpy.linspace(start=x_axis[0], stop=x_axis[-1] + parameters["size"], num=len(y_axis) + parameters["size"], dtype=int)
-        curve = numpy.polynomial.Polynomial.fit(x_axis, y_axis, deg=3)
+        prediction_x_axis = numpy.linspace(start=x_axis[0], stop=x_axis[-1] + parameters["size"], num=len(y_axis) + parameters["size"], dtype=float)
+        curve = numpy.polynomial.Polynomial.fit(x_axis, y_axis, deg=parameters["degree"])
         prediction_y_axis = curve(prediction_x_axis).tolist()
         reference_values = prediction_y_axis[:len(x_axis)]
         forecasted_values = prediction_y_axis[len(x_axis):]
 
         r_square = sklearn.metrics.r2_score(y_axis, reference_values)
-        meta["curves"][int(municipal)] = str(curve)
-        meta["r-scores"][int(municipal)] = r_square
-        meta["real-data-until"][int(municipal)] = str(x_axis[-1])
+        meta["curves"][municipal] = str(curve).replace("\n", " ")
+        meta["r-scores"][municipal] = r_square
+        meta["real-data-until"][municipal] = x_axis[-1]
         for year in prediction_x_axis:
+            if year <= x_axis[-1]:
+                continue
             idx = int(year) - int(prediction_x_axis[0])
             return_objects.append({
-                "label": f"{int(municipal)}",
-                "x": f"{int(year)}",
+                "label": municipal,
+                "x": int(year),
                 "y": float(prediction_y_axis[idx])
             })
 

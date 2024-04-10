@@ -67,7 +67,7 @@ if __name__ == "__main__":
             x_axis.append(year)
             y_axis.append(usage)
             return_objects.append({
-                "label": f"{int(municipal)}",
+                "label": municipal,
                 "x": year,
                 "y": usage,
                 "uncertainty": [0, 0]
@@ -88,7 +88,7 @@ if __name__ == "__main__":
                 if idx == len(y_axis):
                     continue
                 return_objects.append({
-                    "label": f"{int(municipal)}",
+                    "label": municipal,
                     "x": row['ds'].year,
                     "y": row['yhat'],
                     "uncertainty": [row['yhat_lower'], row['yhat_upper']]

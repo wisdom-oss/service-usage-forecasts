@@ -9,15 +9,15 @@ import (
 )
 
 // GetAlgorithmMetadata reads the yaml metadata file supplied by the filepath
-func GetAlgorithmMetadata(metadataFilePath string) (map[string]types.Parameter, string, error) {
+func GetAlgorithmMetadata(metadataFilePath string) (types.AlgorithmMetadata, error) {
 	var metadata types.AlgorithmMetadata
 	file, err := os.Open(metadataFilePath)
 	if err != nil {
-		return nil, "", nil
+		return types.AlgorithmMetadata{}, err
 	}
 	err = yaml.NewDecoder(file).Decode(&metadata)
 	if err != nil {
-		return nil, "", err
+		return types.AlgorithmMetadata{}, err
 	}
-	return metadata.Parameters, metadata.Description, nil
+	return metadata, nil
 }

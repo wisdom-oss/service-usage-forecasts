@@ -1,2 +1,5 @@
 description: >-
   An algorithm that implements an logarithmic fit
+
+useBuckets: true
+bucketSize: 1 year
