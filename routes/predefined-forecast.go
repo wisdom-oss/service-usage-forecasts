@@ -273,7 +273,7 @@ func PredefinedForecast(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if r.MultipartForm != nil && r.MultipartForm.Value["parameter"] != nil {
+	if r.Method == "POST" && r.MultipartForm != nil && r.MultipartForm.Value["parameter"] != nil {
 		c, err := parameterFile.Write([]byte(r.MultipartForm.Value["parameter"][0]))
 		log.Debug().Int("bytes", c).Msg("wrote parameter")
 		if err != nil {
