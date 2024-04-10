@@ -38,7 +38,7 @@ if __name__ == "__main__":
     usage_types = df.groupby(df.usageType)
 
     return_objects = []
-e
+
     meta = {
         "curves": {},
         "r-scores": {},
