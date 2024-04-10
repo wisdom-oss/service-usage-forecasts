@@ -12,7 +12,6 @@ type AlgorithmMetadata struct {
 	// pre-aggregate the data it receives
 	UseBuckets bool `json:"useBuckets" yaml:"useBuckets"`
 
-	// BucketSize specifies the size of each bucket in seconds.
-	// As the buckets may only be of a positive size, the values here are uint64
+	// BucketSize specifies the size of each bucket as a postgres interval
 	BucketSize string `json:"bucketSize" yaml:"bucketSize"`
 }
