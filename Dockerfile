@@ -4,6 +4,8 @@ WORKDIR /tmp/src
 RUN mkdir -p /tmp/build && go mod download & go build -v -o /tmp/build/app
 
 FROM rocker/tidyverse
+COPY algorithms /algorithms
+COPY resources/* /
 USER root
 RUN apt-get update && \
     apt-get install -y python3.10-full dos2unix python-is-python3 python3-pip && \
@@ -12,7 +14,5 @@ RUN apt-get update && \
     echo "conversion done" && \
     pip install pandas numpy scikit-learn orjson prophet
 COPY --from=build-http-server /tmp/build/app /usage-forecasts
-COPY algorithms /algorithms
-COPY resources/* /
 EXPOSE 8000
 ENTRYPOINT ["/usage-forecasts"]
