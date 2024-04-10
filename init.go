@@ -20,21 +20,19 @@ import (
 	"github.com/wisdom-oss/service-usage-forecasts/globals"
 )
 
-var initLogger = log.With().Bool("startup", true).Logger()
-
 // init is executed at every startup of the microservice and is always executed
 // before main
 func init() {
 	// load the variables found in the .env file into the process environment
 	err := godotenv.Load()
 	if err != nil {
-		initLogger.Debug().Msg("no .env files found")
+		log.Debug().Msg("no .env files found")
 	}
 	configureLogger()
 	loadServiceConfiguration()
 	connectDatabase()
 	loadPreparedQueries()
-	initLogger.Info().Msg("initialization process finished")
+	log.Info().Msg("initialization process finished")
 }
 
 // configureLogger handles the configuration of the logger used in the
@@ -64,46 +62,44 @@ func configureLogger() {
 		if err != nil {
 			// since an error occurred while parsing the logging level, use info
 			loggingLevel = zerolog.InfoLevel
-			initLogger.Warn().Msg("unable to parse value from environment. using info")
 		}
 	}
 	// since now a logging level is set, configure the logger
 	zerolog.SetGlobalLevel(loggingLevel)
-	log.Output(os.Stdout)
 }
 
 // loadServiceConfiguration handles loading the `environment.json` file which
 // describes which environment variables are needed for the service to function
 // and what variables are optional and their default values
 func loadServiceConfiguration() {
-	initLogger.Info().Msg("loading service configuration from environment")
+	log.Info().Msg("loading service configuration from environment")
 	// now check if the default location for the environment configuration
 	// was changed via the `ENV_CONFIG_LOCATION` variable
 	location, locationChanged := os.LookupEnv("ENV_CONFIG_LOCATION")
 	if !locationChanged {
 		// since the location has not changed, set the default value
 		location = "./environment.json"
-		initLogger.Debug().Msg("location for environment config not changed")
+		log.Debug().Msg("location for environment config not changed")
 	}
-	initLogger.Debug().Str("path", location).Msg("loading environment requirements file")
+	log.Debug().Str("path", location).Msg("loading environment requirements file")
 	var c wisdomType.EnvironmentConfiguration
 	err := c.PopulateFromFilePath(location)
 	if err != nil {
-		initLogger.Fatal().Err(err).Msg("unable to load environment requirements file")
+		log.Fatal().Err(err).Msg("unable to load environment requirements file")
 	}
-	initLogger.Info().Msg("validating environment variables")
+	log.Info().Msg("validating environment variables")
 	globals.Environment, err = c.ParseEnvironment()
 	if err != nil {
-		initLogger.Fatal().Err(err).Msg("environment validation failed")
+		log.Fatal().Err(err).Msg("environment validation failed")
 	}
-	initLogger.Info().Msg("loaded service configuration from environment")
+	log.Info().Msg("loaded service configuration from environment")
 }
 
 // connectDatabase uses the previously read environment variables to connect the
 // microservice to the PostgreSQL database used as the backend for all WISdoM
 // services
 func connectDatabase() {
-	initLogger.Info().Msg("connecting to the database")
+	log.Info().Msg("connecting to the database")
 
 	address := fmt.Sprintf("postgres://%s:%s@%s:%s/wisdom",
 		globals.Environment["PG_USER"], globals.Environment["PG_PASS"],
@@ -112,17 +108,17 @@ func connectDatabase() {
 	var err error
 	config, err := pgxpool.ParseConfig(address)
 	if err != nil {
-		initLogger.Fatal().Err(err).Msg("unable to create base configuration for connection pool")
+		log.Fatal().Err(err).Msg("unable to create base configuration for connection pool")
 	}
 	globals.Db, err = pgxpool.NewWithConfig(context.Background(), config)
 	if err != nil {
-		initLogger.Fatal().Err(err).Msg("unable to create database connection pool")
+		log.Fatal().Err(err).Msg("unable to create database connection pool")
 	}
 	err = globals.Db.Ping(context.Background())
 	if err != nil {
-		initLogger.Fatal().Err(err).Msg("unable to verify the connection to the database")
+		log.Fatal().Err(err).Msg("unable to verify the connection to the database")
 	}
-	initLogger.Info().Msg("database connection established")
+	log.Info().Msg("database connection established")
 }
 
 // loadPreparedQueries loads the prepared SQL queries from a file specified by
@@ -132,10 +128,10 @@ func connectDatabase() {
 // program terminates.
 // This function is typically called during the startup of the microservice.
 func loadPreparedQueries() {
-	initLogger.Info().Msg("loading prepared sql queries")
+	log.Info().Msg("loading prepared sql queries")
 	var err error
 	globals.SqlQueries, err = dotsql.LoadFromFile(globals.Environment["QUERY_FILE_LOCATION"])
 	if err != nil {
-		initLogger.Fatal().Err(err).Msg("failed to load prepared queries")
+		log.Fatal().Err(err).Msg("failed to load prepared queries")
 	}
 }
