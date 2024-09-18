@@ -9,19 +9,23 @@ parameters:
       The amount of years that shall be predicted, after the source data is
       available.
     default: 30
+    type: float
   interval_width:
     description: >-
       This value determines the width of the uncertainty intervals around the
       forecasted data.
     default: 0.8
+    type: float
   mcmc_samples:
     description: >-
       This value enables a full Bayesian sampling needed to retrieve 
       uncertainties in the seasonality. However, enabling this will make the
       calculation and fitting much longer, depending on the input data set
     default: 0
+    type: float
   changepoint_prior_scale:
     description: >-
       Large values will allow many 
       changepoints, small values will allow few changepoints
     default: 0.05
+    type: float

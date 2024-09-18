@@ -13,6 +13,8 @@ info:
     This microservice allows user to use pre-built and custom on-demand 
     forecasting algorithms to generate water usage forecasts.
   version: 2.0.0
+servers:
+  - url: "/water-usage-rights"
 components:
   schemas:
     Parameter:
@@ -20,6 +22,9 @@ components:
         defaultValue: { }
         description:
           type: string
+        type:
+          type: string
+          description: The python datatype used for this parameter
     Script:
       properties:
         identifier:
@@ -143,6 +148,12 @@ paths:
       - in: path
         name: script-identifier
         description: The Name of the prognosis script
+
+      - in: query
+        name: key
+        description: |
+          The key of a selected area. Which is automatically extended to a 
+          regular expression using the set value as a prefix for a selected area
 
     get:
       summary: Make a Forecast with default parameters

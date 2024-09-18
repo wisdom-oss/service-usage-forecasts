@@ -7,6 +7,7 @@ parameters:
       The degree of the polynomial equation that should be used to fit the
       function to
     default: 3
+    type: int
 
 useBuckets: true
 bucketSize: 1 year

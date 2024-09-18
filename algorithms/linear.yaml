@@ -7,6 +7,7 @@ parameters:
       The amount of years that shall be predicted, after the source data is 
       available
     default: 30
+    type: int
 
 useBuckets: true
 bucketSize: 1 year

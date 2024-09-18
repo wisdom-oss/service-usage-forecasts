@@ -9,4 +9,7 @@ type Parameter struct {
 	// DefaultValue contains the default value of the parameter. Since the
 	// algorithm may accept any type, this value is just an interface
 	DefaultValue interface{} `yaml:"default" json:"default"`
+
+	// Type denotes the python-specific data type that the parameter uses
+	Type string `yaml:"type" json:"type"`
 }
