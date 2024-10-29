@@ -16,16 +16,22 @@ parameters:
       forecasted data.
     default: 0.8
     type: float
-  mcmc_samples:
-    description: >-
-      This value enables a full Bayesian sampling needed to retrieve 
-      uncertainties in the seasonality. However, enabling this will make the
-      calculation and fitting much longer, depending on the input data set
-    default: 0
-    type: float
   changepoint_prior_scale:
     description: >-
-      Large values will allow many 
-      changepoints, small values will allow few changepoints
+      This parameter describes the strength of the sparse prior. Increasing this
+      value from its default value will make the trend more flexible
     default: 0.05
     type: float
+  changepoint_range:
+    description: >-
+      This parameter describes the percentage of time series in which
+      changepoints are inferred
+    default: 0.8
+    type: float
+    min: 0
+    max: 100
+  groupBy:
+    description: >-
+      The column the data should be grouped by before running the calculation
+    default: 'municipal'
+    type: str

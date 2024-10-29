@@ -16,9 +16,9 @@ parameters = {
     "changepoint_range": 0.8,
     "daily_seasonality": False,
     "weekly_seasonality": False,
-    "yearly_seasonality": False,
+    "yearly_seasonality": True,
+    "groupBy": "municipal"
 }
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -45,19 +45,28 @@ if __name__ == "__main__":
     # Remove the localization of the timestamps
     df['ds'] = df['ds'].dt.tz_localize(None)
 
-    # Group the usages by municipals and by the usage types
-    municipals = df.groupby(df.municipal)
+    # check the aggregration type
+    if parameters["groupBy"] == "usageType":
+        groupedData = df.groupby(df.usageType)
+    else:
+        groupedData = df.groupby(df.municipal)
+
+    meta = {
+        "rScores": {},
+        "realDataUntil": {}
+    }
 
     return_objects = []
 
-    meta = {
-        "r-scores": {},
-        "real-data-until": {}
-    }
+    for key, df in groupedData:
+        m = prophet.Prophet(
+            weekly_seasonality=parameters["weekly_seasonality"],
+            daily_seasonality=parameters["daily_seasonality"],
+            yearly_seasonality=parameters["yearly_seasonality"],
+            changepoint_prior_scale=parameters["changepoint_prior_scale"],
+            changepoint_range=parameters["changepoint_range"],
+            interval_width=parameters["interval_width"])
 
-    for municipal, df in municipals:
-        m = prophet.Prophet(weekly_seasonality=False, daily_seasonality=False,
-                            yearly_seasonality=True)
         yearly_usages: pandas.Series = df.groupby(df.ds.dt.year, as_index=True, group_keys=False)['y'].sum()
         x_axis = []
         y_axis = []
@@ -67,7 +76,7 @@ if __name__ == "__main__":
             x_axis.append(year)
             y_axis.append(usage)
             return_objects.append({
-                "label": municipal,
+                "label": key,
                 "x": year,
                 "y": usage,
                 "uncertainty": [0, 0]
@@ -75,7 +84,7 @@ if __name__ == "__main__":
         ds = pandas.to_datetime(x_axis, format="%Y")
         df['ds'] = ds
         m.fit(df)
-        meta["real-data-until"][str(municipal)] = x_axis[-1]
+        meta["realDataUntil"][str(key)] = x_axis[-1]
         future = m.make_future_dataframe(periods=parameters["size"], freq="Y")
         forecast = m.predict(future)
         forecast = forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].copy()
@@ -88,14 +97,14 @@ if __name__ == "__main__":
                 if idx == len(y_axis):
                     continue
                 return_objects.append({
-                    "label": municipal,
+                    "label": key,
                     "x": row['ds'].year,
                     "y": row['yhat'],
                     "uncertainty": [row['yhat_lower'], row['yhat_upper']]
                 })
 
         r_square = sklearn.metrics.r2_score(y_axis, predicted_references)
-        meta["r-scores"][int(municipal)] = r_square
+        meta["rScores"][key] = r_square
 
     with open(args.output_file, 'wt') as f:
         output_object = {

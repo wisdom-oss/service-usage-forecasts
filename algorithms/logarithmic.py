@@ -9,8 +9,10 @@ import numpy
 import sklearn.metrics
 
 parameters = {
-    "size": 30
+    "size": 30,
+    "groupBy": "municipal"
 }
+
 
 
 if __name__ == "__main__":
@@ -25,24 +27,28 @@ if __name__ == "__main__":
     try:
         with open(args.parameter_file) as f:
             ext_parameters = json.load(f)
-            parameters = ext_parameters
+            parameters = parameters | ext_parameters
     except:
         print("using default parameters")
 
     # create a dataframe from the input file
     df = pandas.read_json(args.data_file, dtype={'municipal': str, 'usageType': str, 'date': datetime.datetime, 'amount': float})
-    municipals = df.groupby(df.municipal)
-    usage_types = df.groupby(df.usageType)
+
+    
+
+    if parameters["groupBy"] == "usageType":
+        groupedData = df.groupby(df.usageType)
+    else:
+        groupedData = df.groupby(df.municipal)
 
     return_objects = []
 
     meta = {
         "curves": {},
-        "r-scores": {},
-        "real-data-until": {}
+        "rScores": {},
+        "realDataUntil": {}
     }
-
-    for municipal, df in municipals:
+    for key, df in groupedData:
         yearly_usages: pandas.Series = df.groupby(df.date.dt.year)['amount'].sum()
         x_axis = []
         y_axis = []
@@ -50,7 +56,7 @@ if __name__ == "__main__":
             x_axis.append(year)
             y_axis.append(usage)
             return_objects.append({
-                "label": f"{int(municipal)}",
+                "label": key,
                 "x": year,
                 "y": usage
             })
@@ -62,13 +68,13 @@ if __name__ == "__main__":
         forecasted_values = prediction_y_axis[len(x_axis):]
 
         r_square = sklearn.metrics.r2_score(y_axis, reference_values)
-        meta["curves"][int(municipal)] = str(curve)
-        meta["r-scores"][int(municipal)] = r_square
-        meta["real-data-until"][int(municipal)] = str(x_axis[-1])
+        meta["curves"][key] = str(curve)
+        meta["rScores"][key] = r_square
+        meta["realDataUntil"][key] = int(x_axis[-1])
         for year in prediction_x_axis:
             idx = int(year) - int(prediction_x_axis[0])
             return_objects.append({
-                "label": f"{int(municipal)}",
+                "label": key,
                 "x": f"{int(year)}",
                 "y": float(prediction_y_axis[idx])
             })

@@ -33,7 +33,7 @@ func main() {
 	router.Use(httplog.Handler(l))
 	router.Use(wisdomMiddleware.ErrorHandler)
 	// now add the authorization middleware to the router
-	router.Use(wisdomMiddleware.Authorization(globals.ServiceName))
+	//router.Use(wisdomMiddleware.Authorization(globals.ServiceName))
 	// now mount the admin router
 	router.HandleFunc("/", routes.InformationRoute)
 	router.HandleFunc("/{algorithm-name}", routes.PredefinedForecast)

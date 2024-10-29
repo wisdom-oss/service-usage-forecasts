@@ -14,7 +14,7 @@ info:
     forecasting algorithms to generate water usage forecasts.
   version: 2.0.0
 servers:
-  - url: "/water-usage-rights"
+  - url: "/forecasts"
 components:
   schemas:
     Parameter:
@@ -174,7 +174,7 @@ paths:
                   description: >-
                     The parameters you want to override as key-value-pairs.
                     Parameters that are not included in the object are not
-                    overwritten. The single parameters are returned by the
+                    overwritten. The possible parameters are returned by the
                     `/` endpoint
 
       responses:
