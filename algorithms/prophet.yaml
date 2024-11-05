@@ -35,3 +35,6 @@ parameters:
       The column the data should be grouped by before running the calculation
     default: 'municipal'
     type: str
+    enums:
+      - 'municipal'
+      - 'usageType'
