@@ -1,0 +1,18 @@
+description: >-
+  An algorithm that implements an exponential fit to a variable degree
+
+parameters:
+  degree:
+    description: >-
+      The degree of the polynomial equation that should be used to fit the
+      function to
+    default: 3
+    type: int
+  groupBy:
+    description: >-
+      The column the data should be grouped by before running the calculation
+    default: 'municipal'
+    type: str
+
+useBuckets: true
+bucketSize: 1 year

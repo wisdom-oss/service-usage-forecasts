@@ -1,0 +1,37 @@
+description: >-
+  This forecasting algorithm uses the Prophet algorithm released by Meta.
+  Unfortunately, this algorithm does not provide any means to calculate a
+  Coefficient of determination, therefore this data will not be available.
+
+parameters:
+  size:
+    description: >-
+      The amount of years that shall be predicted, after the source data is
+      available.
+    default: 30
+    type: int
+  interval_width:
+    description: >-
+      This value determines the width of the uncertainty intervals around the
+      forecasted data.
+    default: 0.8
+    type: float
+  changepoint_prior_scale:
+    description: >-
+      This parameter describes the strength of the sparse prior. Increasing this
+      value from its default value will make the trend more flexible
+    default: 0.05
+    type: float
+  changepoint_range:
+    description: >-
+      This parameter describes the percentage of time series in which
+      changepoints are inferred
+    default: 0.8
+    type: float
+    min: 0
+    max: 100
+  groupBy:
+    description: >-
+      The column the data should be grouped by before running the calculation
+    default: 'municipal'
+    type: str

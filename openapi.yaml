@@ -1,0 +1,182 @@
+openapi: "3.0.0"
+info:
+  title: Usage Forecasts
+  description: |
+    > **Note**
+    > This microservice replaces the two-part microservice to minimize the used
+    > technologies in the WISdoM platform. All features present in the two-part
+    > microservice will be ported.
+    >
+    > The only feature that will not be ported is the communication using AMQP 
+    > since this technology will be discontinued in the WISdoM platform.
+    
+    This microservice allows user to use pre-built and custom on-demand 
+    forecasting algorithms to generate water usage forecasts.
+  version: 2.0.0
+servers:
+  - url: "/forecasts"
+components:
+  schemas:
+    Parameter:
+      properties:
+        defaultValue: { }
+        description:
+          type: string
+        type:
+          type: string
+          description: The python datatype used for this parameter
+    Script:
+      properties:
+        identifier:
+          type: string
+        description:
+          type: string
+        parameters:
+          type: array
+          items:
+            $ref: '#/components/schemas/Parameter'
+
+    ResultMetadata:
+      properties:
+        rScores:
+          description: >-
+            The R²-Scores archived by the prognosis mapped to each available
+            label.
+          type: object
+          example:
+            label1: 0.01
+            label2: 0.02
+          additionalProperties:
+            type: number
+        realDataUntil:
+          description: >-
+            A map indicating until which value the real data is contained on the
+            x-Axis
+          type: object
+          example:
+            label1: 0.01
+            label2: 0.02
+          additionalProperties:
+            type: number
+
+    Datapoint:
+      type: object
+      properties:
+        label:
+          type: string
+          description: >-
+            A unique label for the data contained under this dataseries
+        x:
+          type: number
+          description: >-
+            The value on the x-Axis (in this case the year as int)
+        y:
+          type: number
+          description: >-
+            The water-usage
+    
+    
+
+    NumPyResult:
+      properties:
+        meta:
+          allOf:
+            - $ref: '#/components/schemas/ResultMetadata'
+            - properties:
+                curves:
+                  description: >-
+                    A map containing the mathematical equations used to
+                    calculate the values in the data set
+                  type: object
+                  example:
+                    label1: 5+4*x
+                    label2: 100+9.4643*x
+                  additionalProperties:
+                    type: string
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Datapoint'
+
+    ProphetResult:
+      properties:
+        meta:
+          $ref: '#/components/schemas/ResultMetadata'
+        data:
+          type: array
+          items:
+            allOf:
+              - $ref: '#/components/schemas/Datapoint'
+              - type: object
+                properties:
+                  uncertainty:
+                    type: array
+                    minItems: 2
+                    maxItems: 2
+                    items:
+                      type: number
+
+  responses:
+    SuccessfulForecast:
+      description: Forecast executed successfully
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/ProphetResult'
+              - $ref: '#/components/schemas/NumPyResult'
+
+
+paths:
+  /:
+    get:
+      operationId: get-info
+      summary: Get available algorithms
+      description: |
+        Get information about the currently available algorithms and their
+        parameters.
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Script'
+  /{script-identifier}:
+    parameters:
+      - in: path
+        name: script-identifier
+        description: The Name of the prognosis script
+
+      - in: query
+        name: key
+        description: |
+          The key of a selected area. Which is automatically extended to a 
+          regular expression using the set value as a prefix for a selected area
+
+    get:
+      summary: Make a Forecast with default parameters
+      responses:
+        200:
+          $ref: '#/components/responses/SuccessfulForecast'
+
+    post:
+      summary: Make a forecast with changed parameters
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                parameters:
+                  type: object
+                  description: >-
+                    The parameters you want to override as key-value-pairs.
+                    Parameters that are not included in the object are not
+                    overwritten. The possible parameters are returned by the
+                    `/` endpoint
+
+      responses:
+        200:
+          $ref: '#/components/responses/SuccessfulForecast'

@@ -1,8 +1,20 @@
 [
   {
-    "code": "TEMPLATE",
-    "title": "Template Error",
-    "description": "This is a template error, if you see this this means the error handling in the template works",
+    "code": "NO_AREA_DEFINED",
+    "title": "No Area Defined",
+    "description": "The request did not specify an area for which the forecast will be executed",
     "httpCode": 400
+  },
+  {
+    "code": "ALGORITHM_NOT_SET",
+    "title": "Algorithm not set",
+    "description": "The url is missing a algorithm identifier",
+    "httpCode": 400
+  },
+  {
+    "code": "UNKNOWN_ALGORITHM",
+    "title": "Unknown Algorithm",
+    "description": "The algorithm specified in the url is unknown",
+    "httpCode": 404
   }
 ]

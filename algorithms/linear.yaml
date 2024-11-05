@@ -1,0 +1,18 @@
+description: >-
+  An algorithm that implements an linear fit
+
+parameters:
+  size:
+    description: >-
+      The amount of years that shall be predicted, after the source data is 
+      available
+    default: 30
+    type: int
+  groupBy:
+    description: >-
+      The column the data should be grouped by before running the calculation
+    default: 'municipal'
+    type: str
+
+useBuckets: true
+bucketSize: 1 year
