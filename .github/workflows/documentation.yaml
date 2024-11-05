@@ -1,9 +1,12 @@
 name: Update Documentation
 on:
+  workflow_dispatch:
   push:
     paths:
       - 'docs/**'
       - 'README.md'
+      - 'openapi.yml'
+      - 'openapi.yaml'
 
 jobs:
   trigger-update:
