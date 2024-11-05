@@ -7,7 +7,9 @@ FROM python:3.10-bookworm
 COPY algorithms /algorithms
 COPY resources/* /
 USER root
-RUN chmod +x /algorithms -R && \
+RUN apt-get update && \
+    apt-get install -y dos2unix python-is-python3 && \
+    chmod +x /algorithms -R && \
     find /algorithms -type f -print0 | xargs -0 dos2unix && \
     echo "conversion done" && \
     pip install pandas numpy scikit-learn orjson prophet
