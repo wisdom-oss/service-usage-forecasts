@@ -12,4 +12,11 @@ type Parameter struct {
 
 	// Type denotes the python-specific data type that the parameter uses
 	Type string `yaml:"type" json:"type"`
+
+	// AllowedValues contain the allowed values for each field
+	Enums []string `yaml:"enums" json:"enums,omitempty"`
+
+	// Max contains a numerical limit or maximum number of the field
+	Max *int `yaml:"max" json:"max,omitempty"`
+	Min *int `yaml:"min" json:"min,omitempty"`
 }
