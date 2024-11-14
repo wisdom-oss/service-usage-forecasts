@@ -20,6 +20,6 @@ FROM python:3.10-slim
 COPY --link resources/* .
 COPY --link --from=algorithm-converter --chmod=777 /algorithms /algorithms
 COPY --link --from=build-http-server /out/service /usage-forecasts
-COPY --from=python-prep /usr/local/lib/python3.10/site-packages /usr/local/lib/python3.10/site-packages
+COPY --link --from=python-prep /usr/local/lib/python3.10/site-packages /usr/local/lib/python3.10/site-packages
 EXPOSE 8000
 ENTRYPOINT ["/usage-forecasts"]
