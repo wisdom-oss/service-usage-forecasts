@@ -1,3 +1,5 @@
+
+displayName: Prophet
 description: >-
   This forecasting algorithm uses the Prophet algorithm released by Meta.
   Unfortunately, this algorithm does not provide any means to calculate a

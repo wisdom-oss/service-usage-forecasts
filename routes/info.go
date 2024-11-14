@@ -52,6 +52,7 @@ func InformationRoute(w http.ResponseWriter, r *http.Request) {
 			<-statusChannel
 			return
 		}
+		algorithmInformation.DisplayName = metadata.DisplayName
 		algorithmInformation.Parameter = metadata.Parameters
 		algorithmInformation.Description = metadata.Description
 		algorithmInformation.BucketConfiguration.UseBuckets = metadata.UseBuckets

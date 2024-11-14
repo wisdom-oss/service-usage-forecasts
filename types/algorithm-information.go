@@ -1,6 +1,9 @@
 package types
 
 type AlgorithmInformation struct {
+	// DisplayName contains a human-readable name for the algorithm
+	DisplayName string `json:"displayName"`
+
 	// Filename contains the filename in which the algorithm is stored
 	Filename string `json:"-"`
 
