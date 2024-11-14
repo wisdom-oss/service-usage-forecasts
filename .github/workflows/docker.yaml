@@ -1,9 +1,16 @@
 name: Create/Release Docker Image
 on:
+  workflow_dispatch:
   push:
     branches: [ "main", "dev" ]
     # Publish semver tags as releases.
     tags: [ 'v*.*.*' ]
+    paths:
+      - '**.go'
+      - 'go.mod'
+      - 'go.sum'
+      - 'algorithms/**'
+      - 'requirements.txt'
   pull_request:
     branches: [ "main" ]
 
