@@ -29,6 +29,8 @@ components:
       properties:
         identifier:
           type: string
+        displayName:
+          type: string
         description:
           type: string
         parameters:
